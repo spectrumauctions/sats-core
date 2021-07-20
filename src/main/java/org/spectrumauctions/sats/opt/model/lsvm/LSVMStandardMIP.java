@@ -12,12 +12,15 @@ import lombok.EqualsAndHashCode;
 import org.marketdesignresearch.mechlib.core.Allocation;
 import org.marketdesignresearch.mechlib.core.BidderAllocation;
 import org.marketdesignresearch.mechlib.core.Bundle;
+import org.marketdesignresearch.mechlib.core.Good;
+import org.marketdesignresearch.mechlib.core.allocationlimits.AllocationLimitConstraint;
 import org.marketdesignresearch.mechlib.core.bid.bundle.BundleExactValueBids;
 import org.marketdesignresearch.mechlib.core.bid.bundle.BundleValueBids;
 import org.marketdesignresearch.mechlib.core.bidder.Bidder;
 import org.marketdesignresearch.mechlib.instrumentation.MipInstrumentation;
 import org.marketdesignresearch.mechlib.metainfo.MetaInfo;
 import org.spectrumauctions.sats.core.model.cats.graphalgorithms.Vertex;
+import org.spectrumauctions.sats.core.model.gsvm.GSVMBidder;
 import org.spectrumauctions.sats.core.model.lsvm.LSVMBidder;
 import org.spectrumauctions.sats.core.model.lsvm.LSVMGrid;
 import org.spectrumauctions.sats.core.model.lsvm.LSVMLicense;
@@ -72,6 +75,7 @@ public class LSVMStandardMIP extends ModelMIP {
 		buildNeighbourConstraints();
 		buildEdgeConstraints();
 		buildTauConstraints();
+		buildAllocationLimits();
 		if(!this.world.isLegacyLSVM()) {
 			buildLicenceRestrictions();
 		}
@@ -313,6 +317,15 @@ public class LSVMStandardMIP extends ModelMIP {
 		}
 		Set<Integer> valid = solution.stream().map(path -> path.size() - 1).collect(Collectors.toSet());
 		validPathLengths.put(edge, valid);
+	}
+	
+	private void buildAllocationLimits() {
+		for(LSVMBidder bidder : this.population) {
+			Map<Good, List<Variable>> bidderVariables = aVariables.get(bidder).entrySet().stream().collect(Collectors.toMap(e->e.getKey(), e-> new ArrayList<>(e.getValue().values()), (e1, e2) -> e1, LinkedHashMap::new));
+			for(AllocationLimitConstraint alc : bidder.getAllocationLimit().getConstraints()) {
+				this.getMIP().add(alc.createCPLEXConstraintWithMultiVarsPerGood(bidderVariables));
+			}
+		}
 	}
 
 	private void initE() {

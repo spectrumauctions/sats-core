@@ -15,46 +15,52 @@ import org.marketdesignresearch.mechlib.mechanism.auctions.mlca.svr.kernels.Kern
 public enum SupportVectorSetupFactory {
 	INSTANCE;
 	
+	// Linear and Quadratic kernels tuned for MLCA with Q_max = 100, Q_init = 50, Q_round = 4
 	private Map<KernelType,Kernel> gsvmDefaultKernels = Map.of(
-			KernelType.Linear, new KernelLinear(0d, 0.2d), 
-			KernelType.Quadratic, new KernelQuadratic(0d, 1d, 0025d),
-			KernelType.Polynomial, new KernelDotProductPolynomial(new double[] {0d,1d,0025d}),
+			KernelType.Linear, new KernelLinear(0d, 1d), 
+			KernelType.Quadratic, new KernelQuadratic(0d, 1d, 0.0078125d),
+			KernelType.Polynomial, new KernelDotProductPolynomial(new double[] {0d, 1d, 0.0078125d}),
 			KernelType.Exponential, new KernelDotProductExponential(10d, 10d),
 			KernelType.Gaussian, new KernelGaussian(20d, 10d));
 	
+	// Linear and Quadratic SVR Setup tuned for MLCA with Q_max = 100, Q_init = 50, Q_round = 4
+	private Map<KernelType,SupportVectorSetup> gsvmTunedDefaultSetups = Map.of(
+			KernelType.Linear, new SupportVectorSetup(100000000d, 0.00001d, BigDecimal.valueOf(100),true,1e-8, this.gsvmDefaultKernels.get(KernelType.Linear)),
+			KernelType.Quadratic, new SupportVectorSetup(1000000d, 0.00001d, BigDecimal.valueOf(100),true,1e-8, this.gsvmDefaultKernels.get(KernelType.Quadratic))
+					);
+	
+	//Linear and Quadratic kernels tuned for MLCA with Q_max = 500, Q_init = 50, Q_round = 4
 	private Map<KernelType,Kernel> lsvmDefaultKernels = Map.of(
-			KernelType.Linear, new KernelLinear(0d,0d),
-			KernelType.Quadratic, new KernelQuadratic(0d, 80d, 0.5d),
-			KernelType.Polynomial, new KernelDotProductPolynomial(new double[] {0d,80d,0.5d}),
+			KernelType.Linear, new KernelLinear(0d,1d),
+			KernelType.Quadratic, new KernelQuadratic(0d, 1d, 0.03125d),
+			KernelType.Polynomial, new KernelDotProductPolynomial(new double[] {0d, 1d, 0.03125d}),
 			KernelType.Exponential, new KernelDotProductExponential(5d, 10d),
 			KernelType.Gaussian, new KernelGaussian(10d,10d));
 	
+	private Map<KernelType,SupportVectorSetup> lsvmTunedDefaultSetups = Map.of(
+			KernelType.Linear, new SupportVectorSetup(1000000d,0.00001d,BigDecimal.valueOf(100),true,1e-8,this.lsvmDefaultKernels.get(KernelType.Linear)),
+			KernelType.Quadratic, new SupportVectorSetup(100000d,0.00001d,BigDecimal.valueOf(100),true,1e-8,this.lsvmDefaultKernels.get(KernelType.Quadratic))
+			);
+			
+	
 	private Map<KernelType,Kernel> mrvmDefaultKernels = Map.of(
-			KernelType.Linear, new KernelLinear(0d,100d),
-			KernelType.Quadratic, new KernelQuadratic(0d,100d,0.1d),
-			KernelType.Polynomial, new KernelDotProductPolynomial(new double[] {0d,100d,0.1d}),
+			KernelType.Linear, new KernelLinear(0d,1d),
+			KernelType.Quadratic, new KernelQuadratic(0d,1d,0.001d),
+			KernelType.Polynomial, new KernelDotProductPolynomial(new double[] {0d,1d,0.001d}),
 			KernelType.Exponential, new KernelDotProductExponential(100d, 100d),
 			KernelType.Gaussian, new KernelGaussian(100d, 100d));
 	
 	public SupportVectorSetup createDefaultGSVMSupportVectorSetup(KernelType kernelType) {
-		return new SupportVectorSetup(3000d, 0.05d, BigDecimal.ONE,this.getRemoveSupportVectors(kernelType), this.gsvmDefaultKernels.get(kernelType));
+		return gsvmTunedDefaultSetups.getOrDefault(kernelType, 
+				new SupportVectorSetup(1000000d, 0.00001d, BigDecimal.valueOf(100),true,1e-8, this.gsvmDefaultKernels.get(kernelType)));
 	}
 	
 	public SupportVectorSetup createDefaultLSVMSupportVectorSetup(KernelType kernelType) {
-		return new SupportVectorSetup(100d,0.0001d,BigDecimal.ONE,this.getRemoveSupportVectors(kernelType),this.lsvmDefaultKernels.get(kernelType));
+		return lsvmTunedDefaultSetups.getOrDefault(kernelType,
+				new SupportVectorSetup(100000d,0.00001d,BigDecimal.valueOf(100),true,1e-8,this.lsvmDefaultKernels.get(kernelType)));
 	}
 	
 	public SupportVectorSetup createDefaultMRVMSupportVectorSetup(KernelType kernelType) {
-		return new SupportVectorSetup(100d,0.0001d,BigDecimal.ONE.divide(BigDecimal.valueOf(100000)),this.getRemoveSupportVectors(kernelType),this.mrvmDefaultKernels.get(kernelType));
+		return new SupportVectorSetup(1000d,0.00001d,BigDecimal.ONE.divide(BigDecimal.valueOf(1000000)),true,1e-8,this.mrvmDefaultKernels.get(kernelType));
 	}
-	
-	/**
-	 * For historic reasons eliminiate small support vectors (1e-5) in linear and quadratic kernel SVRs
-	 */
-	private boolean getRemoveSupportVectors(KernelType type) {
-		if(type.equals(KernelType.Linear) || type.equals(KernelType.Quadratic)) 
-			return true;
-		return false;
-	}
-	
 }

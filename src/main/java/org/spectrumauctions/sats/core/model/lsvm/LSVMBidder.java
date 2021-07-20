@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.marketdesignresearch.mechlib.core.Allocation;
 import org.marketdesignresearch.mechlib.core.Bundle;
+import org.marketdesignresearch.mechlib.core.allocationlimits.AllocationLimit;
 import org.marketdesignresearch.mechlib.core.price.Prices;
 import org.marketdesignresearch.mechlib.instrumentation.MipInstrumentation;
 import org.spectrumauctions.sats.core.bidlang.BiddingLanguage;
@@ -36,6 +37,9 @@ public final class LSVMBidder extends SATSBidder {
     private final HashMap<Long, BigDecimal> values;
     private transient LSVMWorld world;
     private final String description;
+    @Getter
+    @Setter
+    private AllocationLimit allocationLimit = AllocationLimit.NO;
 
     LSVMBidder(LSVMBidderSetup setup, LSVMWorld world, long currentId, long population, RNGSupplier rngSupplier) {
         super(setup, population, currentId, world.getId());

@@ -34,6 +34,8 @@ import edu.harvard.econcs.jopt.solver.mip.Constraint;
 import edu.harvard.econcs.jopt.solver.mip.MIP;
 import edu.harvard.econcs.jopt.solver.mip.VarType;
 import edu.harvard.econcs.jopt.solver.mip.Variable;
+import lombok.Setter;
+import lombok.Getter;
 
 /**
  * @author Fabio Isler
@@ -45,7 +47,9 @@ public final class GSVMBidder extends SATSBidder {
     private final HashMap<Long, BigDecimal> values;
     private transient GSVMWorld world;
     private final String description;
-    private final AllocationLimit allocationLimit;
+    @Getter
+    @Setter
+    private AllocationLimit allocationLimit;
 
     GSVMBidder(GSVMBidderSetup setup, GSVMWorld world, int bidderPosition, long currentId, long population, RNGSupplier rngSupplier) {
         super(setup, population, currentId, world.getId());
